@@ -24,16 +24,19 @@ def index():
     if request.method == 'POST':
         original_url = request.form['url']
         short_url = shorten_url(original_url)
-        
+
         # Save to database
         conn = sqlite3.connect('urls.db')
         c = conn.cursor()
         c.execute("INSERT INTO urls (original, short) VALUES (?, ?)", (original_url, short_url))
         conn.commit()
         conn.close()
-        
-        return f'Shortened URL: <a href="/{short_url}">/{short_url}</a>'
-    
+
+        # Construct the full shortened URL
+        full_shortened_url = f'http://127.0.0.1:5000/{short_url}'
+
+        return f'Old URL: {original_url}<br>New Shortened URL: <a href="{full_shortened_url}">{full_shortened_url}</a>'
+
     return render_template('index.html')
 
 @app.route('/<short_url>')
@@ -43,7 +46,7 @@ def redirect_to_url(short_url):
     c.execute("SELECT original FROM urls WHERE short=?", (short_url,))
     result = c.fetchone()
     conn.close()
-    
+
     if result:
         return redirect(result[0])
     else:
